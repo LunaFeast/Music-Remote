@@ -1,13 +1,26 @@
 /* 探针共用的「从真源码里切一颗」的尺 —— 外30 这一批新台子都用它，不再各自抄第二份。
    规矩和 test-marks.mjs 那把一样：切的是仓库里那一份原文（不抄第二份），
    函数看到配对的大括号就收，常量看到浅层分号就收；字符串、注释、正则字面量里的括号不算数。
-   文件名不带 test-/gate-/klog- 前缀：selfcheck 那一头只点那三类，这一颗是零件不是台子。 */
+   文件名不带 test-/gate-/klog- 前缀：selfcheck 那一头只点那三类，这一颗是零件不是台子。
+
+   插件分离第 5 批之后多的一格：主程序那一仓里不再有插件那几份（一家一仓，搬走了），
+   可这一摞台子有一半在验的就是那几份。所以 rd 找不到的时候往**隔壁那一棵**再看一眼 ——
+   隔壁那几棵的名字不抄第二份名单，拿搬仓那一颗的 仓名 那一张表现算（那一本不在的时候这一格自动空着，
+   也就是这一棵本来就是某一家自己的那一棵，不需要问邻居）。
+   这一格只改"读得到读不到"，不改任何判据：主程序仓里一个插件字节都不进，公开面上推出去的还是空壳。 */
 import fs from 'node:fs';
 import { fileURLToPath as __url } from 'node:url';
+import { 找 as __找, 邻居数 as __邻居数 } from '../../_build/邻居.mjs';   /* 到哪儿找那一份，全仓只此一处 */
 const __树根 = __url(new URL('../../../', import.meta.url)).replace(/[\\/]+$/, '');   /* 仓根从这份脚本自己的位置算，不写死本机路径 */
 
 export const ROOT = __树根 + '/';
-export const rd = p => fs.readFileSync(ROOT + p, 'utf8');
+export const 隔壁 = () => __邻居数();      /* 量一眼：这一棵旁边站着几家（0 = 问不到邻居） */
+export const rd = p => fs.readFileSync(__找(p, ROOT), 'utf8');
+export const rd在 = p => __找(p, ROOT);
+/* 列目录也走同一处：从前这几台各自 fs.readdirSync(ROOT + 目录)，插件那几格搬走之后就撞 ENOENT。
+   邻居那一棵里也没有 → 交回本仓那一条，让 fs 报它自己的 ENOENT（selfcheck 认这一句报缺数据，不报哑）。 */
+export const lsd = p => fs.readdirSync(__找(p, ROOT));
+export const 有 = p => fs.existsSync(__找(p, ROOT));
 
 function 扫过(s, i){
   const c = s[i], d = s[i + 1];
